@@ -1,4 +1,4 @@
-import { serve } from "@hono/node-server";
+import { handle } from "@hono/node-server/vercel";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { tmt } from "tencentcloud-sdk-nodejs";
@@ -14,10 +14,10 @@ const client = new TmtClient({
   region: "ap-shanghai",
 });
 
-const app = new Hono();
+const app = new Hono().basePath("/api");
 app.use("*", cors());
 
-app.get("/api/word", async (c) => {
+app.get("/word", async (c) => {
   const name = c.req.query("name");
   if (!name) {
     throw new Error("name is required");
@@ -27,7 +27,7 @@ app.get("/api/word", async (c) => {
   return c.json(res);
 });
 
-app.post("/api/translate", async (c) => {
+app.post("/translate", async (c) => {
   const body = await c.req.json<{ text: string }>();
   if (!body.text) {
     throw new Error("text is required");
@@ -45,10 +45,4 @@ app.post("/api/translate", async (c) => {
   });
 });
 
-const PORT = 3002;
-serve({
-  fetch: app.fetch,
-  port: PORT,
-});
-
-console.log(`Server is running on port ${PORT}`);
+export default handle(app);
